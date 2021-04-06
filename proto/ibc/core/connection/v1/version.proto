@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package ibc.core.connection.v1;
+
+import "gogoproto/gogo.proto";
+
+// Version defines the versioning scheme used to negotiate the IBC verison in
+// the connection handshake.
+message Version {
+  option (gogoproto.goproto_getters) = false;
+
+  // unique version identifier
+  string identifier = 1;
+  // list of features compatible with the specified identifier
+  repeated string features = 2;
+}

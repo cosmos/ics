@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package ibc.core.channel.v1;
+
+import "gogoproto/gogo.proto";
+
+// Channel defines pipeline for exactly-once packet delivery between specific
+// modules on separate blockchains, which has at least one end capable of
+// sending packets and one end capable of receiving packets.
+message Channel {
+  option (gogoproto.goproto_getters) = false;
+
+  // current state of the channel end
+  State state = 1;
+  // whether the channel is ordered or unordered
+  Order ordering = 2;
+  // counterparty channel end
+  Counterparty counterparty = 3 [(gogoproto.nullable) = false];
+  // list of connection identifiers, in order, along which packets sent on
+  // this channel will travel
+  repeated string connection_hops = 4 [(gogoproto.moretags) = "yaml:\"connection_hops\""];
+  // opaque channel version, which is agreed upon during the handshake
+  string version = 5;
+}
+
+// State defines if a channel is in one of the following states:
+// CLOSED, INIT, TRYOPEN, OPEN or UNINITIALIZED.
+enum State {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // Default State
+  STATE_UNINITIALIZED_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "UNINITIALIZED"];
+  // A channel has just started the opening handshake.
+  STATE_INIT = 1 [(gogoproto.enumvalue_customname) = "INIT"];
+  // A channel has acknowledged the handshake step on the counterparty chain.
+  STATE_TRYOPEN = 2 [(gogoproto.enumvalue_customname) = "TRYOPEN"];
+  // A channel has completed the handshake. Open channels are
+  // ready to send and receive packets.
+  STATE_OPEN = 3 [(gogoproto.enumvalue_customname) = "OPEN"];
+  // A channel has been closed and can no longer be used to send or receive
+  // packets.
+  STATE_CLOSED = 4 [(gogoproto.enumvalue_customname) = "CLOSED"];
+}
+
+// Order defines if a channel is ORDERED or UNORDERED
+enum Order {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // zero-value for channel ordering
+  ORDER_NONE_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "NONE"];
+  // packets can be delivered in any order, which may differ from the order in
+  // which they were sent.
+  ORDER_UNORDERED = 1 [(gogoproto.enumvalue_customname) = "UNORDERED"];
+  // packets are delivered exactly in the order which they were sent
+  ORDER_ORDERED = 2 [(gogoproto.enumvalue_customname) = "ORDERED"];
+}
+
+// Counterparty defines a channel end counterparty
+message Counterparty {
+  option (gogoproto.goproto_getters) = false;
+
+  // port on the counterparty chain which owns the other end of the channel.
+  string port_id = 1 [(gogoproto.moretags) = "yaml:\"port_id\""];
+  // channel end on the counterparty chain
+  string channel_id = 2 [(gogoproto.moretags) = "yaml:\"channel_id\""];
+}
+

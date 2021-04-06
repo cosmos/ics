@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package ibc.core.connection.v1;
+
+import "gogoproto/gogo.proto";
+import "ibc/core/commitment/v1/commitment.proto";
+
+// ICS03 - Connection Data Structures as defined in
+// https://github.com/cosmos/ics/tree/master/spec/ics-003-connection-semantics#data-structures
+
+// ConnectionEnd defines a stateful object on a chain connected to another
+// separate one.
+// NOTE: there must only be 2 defined ConnectionEnds to establish
+// a connection between two chains.
+message ConnectionEnd {
+  option (gogoproto.goproto_getters) = false;
+  // client associated with this connection.
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // IBC version which can be utilised to determine encodings or protocols for
+  // channels or packets utilising this connection.
+  repeated Version versions = 2;
+  // current state of the connection end.
+  State state = 3;
+  // counterparty chain associated with this connection.
+  Counterparty counterparty = 4 [(gogoproto.nullable) = false];
+  // delay period that must pass before a consensus state can be used for packet-verification
+  // NOTE: delay period logic is only implemented by some clients.
+  uint64 delay_period = 5 [(gogoproto.moretags) = "yaml:\"delay_period\""];
+}
+
+// State defines if a connection is in one of the following states:
+// INIT, TRYOPEN, OPEN or UNINITIALIZED.
+enum State {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // Default State
+  STATE_UNINITIALIZED_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "UNINITIALIZED"];
+  // A connection end has just started the opening handshake.
+  STATE_INIT = 1 [(gogoproto.enumvalue_customname) = "INIT"];
+  // A connection end has acknowledged the handshake step on the counterparty
+  // chain.
+  STATE_TRYOPEN = 2 [(gogoproto.enumvalue_customname) = "TRYOPEN"];
+  // A connection end has completed the handshake.
+  STATE_OPEN = 3 [(gogoproto.enumvalue_customname) = "OPEN"];
+}
+
+// Counterparty defines the counterparty chain associated with a connection end.
+message Counterparty {
+  option (gogoproto.goproto_getters) = false;
+
+  // identifies the client on the counterparty chain associated with a given
+  // connection.
+  string client_id = 1 [(gogoproto.moretags) = "yaml:\"client_id\""];
+  // identifies the connection end on the counterparty chain associated with a
+  // given connection.
+  string connection_id = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  // commitment merkle prefix of the counterparty chain.
+  ibc.core.commitment.v1.MerklePrefix prefix = 3 [(gogoproto.nullable) = false];
+}
+
+// Version defines the versioning scheme used to negotiate the IBC verison in
+// the connection handshake.
+message Version {
+  option (gogoproto.goproto_getters) = false;
+
+  // unique version identifier
+  string identifier = 1;
+  // list of features compatible with the specified identifier
+  repeated string features = 2;
+}
