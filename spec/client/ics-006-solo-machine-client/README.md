@@ -186,6 +186,10 @@ function verifyClientState(
   clientIdentifier: Identifier,
   counterpartyClientState: ClientState) {
     path = applyPrefix(prefix, "clients/{clientIdentifier}/clientState")
+    // ICS 003 will not increment the proof height after connection verification
+    // the solo machine client must increment the proof height to ensure it matches 
+    // the expected sequence used in the signature
+    abortTransactionUnless(height + 1 == clientState.consensusState.sequence)
     abortTransactionUnless(!clientState.frozen)
     abortTransactionUnless(proof.timestamp >= clientState.consensusState.timestamp)
     value = clientState.consensusState.sequence + clientState.consensusState.diversifier + proof.timestamp + path + counterpartyClientState
@@ -203,6 +207,10 @@ function verifyClientConsensusState(
   consensusStateHeight: uint64,
   consensusState: ConsensusState) {
     path = applyPrefix(prefix, "clients/{clientIdentifier}/consensusState/{consensusStateHeight}")
+    // ICS 003 will not increment the proof height after connection or client state verification
+    // the solo machine client must increment the proof height by 2 to ensure it matches 
+    // the expected sequence used in the signature
+    abortTransactionUnless(height + 2 == clientState.consensusState.sequence)
     abortTransactionUnless(!clientState.frozen)
     abortTransactionUnless(proof.timestamp >= clientState.consensusState.timestamp)
     value = clientState.consensusState.sequence + clientState.consensusState.diversifier + proof.timestamp + path + consensusState
@@ -219,6 +227,7 @@ function verifyConnectionState(
   connectionIdentifier: Identifier,
   connectionEnd: ConnectionEnd) {
     path = applyPrefix(prefix, "connection/{connectionIdentifier}")
+    abortTransactionUnless(height == clientState.consensusState.sequence)
     abortTransactionUnless(!clientState.frozen)
     abortTransactionUnless(proof.timestamp >= clientState.consensusState.timestamp)
     value = clientState.consensusState.sequence + clientState.consensusState.diversifier + proof.timestamp + path + connectionEnd
@@ -236,6 +245,7 @@ function verifyChannelState(
   channelIdentifier: Identifier,
   channelEnd: ChannelEnd) {
     path = applyPrefix(prefix, "ports/{portIdentifier}/channels/{channelIdentifier}")
+    abortTransactionUnless(height == clientState.consensusState.sequence)
     abortTransactionUnless(!clientState.frozen)
     abortTransactionUnless(proof.timestamp >= clientState.consensusState.timestamp)
     value = clientState.consensusState.sequence + clientState.consensusState.diversifier + proof.timestamp + path + channelEnd
@@ -254,6 +264,7 @@ function verifyPacketData(
   sequence: uint64,
   data: bytes) {
     path = applyPrefix(prefix, "ports/{portIdentifier}/channels/{channelIdentifier}/packets/{sequence}")
+    abortTransactionUnless(height == clientState.consensusState.sequence)
     abortTransactionUnless(!clientState.frozen)
     abortTransactionUnless(proof.timestamp >= clientState.consensusState.timestamp)
     value = clientState.consensusState.sequence + clientState.consensusState.diversifier + proof.timestamp + path + data
@@ -272,6 +283,7 @@ function verifyPacketAcknowledgement(
   sequence: uint64,
   acknowledgement: bytes) {
     path = applyPrefix(prefix, "ports/{portIdentifier}/channels/{channelIdentifier}/acknowledgements/{sequence}")
+    abortTransactionUnless(height == clientState.consensusState.sequence)
     abortTransactionUnless(!clientState.frozen)
     abortTransactionUnless(proof.timestamp >= clientState.consensusState.timestamp)
     value = clientState.consensusState.sequence + clientState.consensusState.diversifier + proof.timestamp + path + acknowledgement
@@ -289,6 +301,7 @@ function verifyPacketReceiptAbsence(
   channelIdentifier: Identifier,
   sequence: uint64) {
     path = applyPrefix(prefix, "ports/{portIdentifier}/channels/{channelIdentifier}/receipts/{sequence}")
+    abortTransactionUnless(height == clientState.consensusState.sequence)
     abortTransactionUnless(!clientState.frozen)
     abortTransactionUnless(proof.timestamp >= clientState.consensusState.timestamp)
     value = clientState.consensusState.sequence + clientState.consensusState.diversifier + proof.timestamp + path
@@ -306,6 +319,7 @@ function verifyNextSequenceRecv(
   channelIdentifier: Identifier,
   nextSequenceRecv: uint64) {
     path = applyPrefix(prefix, "ports/{portIdentifier}/channels/{channelIdentifier}/nextSequenceRecv")
+    abortTransactionUnless(height == clientState.consensusState.sequence)
     abortTransactionUnless(!clientState.frozen)
     abortTransactionUnless(proof.timestamp >= clientState.consensusState.timestamp)
     value = clientState.consensusState.sequence + clientState.consensusState.diversifier + proof.timestamp + path + nextSequenceRecv
